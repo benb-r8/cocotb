@@ -228,11 +228,6 @@ long FliEnumObjHdl::get_signal_value_long()
 
 int FliEnumObjHdl::set_signal_value(const long value, const gpi_set_action_t action)
 {
-    // if (action != GPI_DEPOSIT) {
-    //     LOG_ERROR("Force or release action not supported for FLI.");
-    //     return -1;
-    // }
-
     if (value > m_num_enum || value < 0) {
         LOG_ERROR("Attempted to set a enum with range [0,%d] with invalid value %d!\n", m_num_enum, value);
         return -1;
@@ -336,11 +331,6 @@ const char* FliLogicObjHdl::get_signal_value_binstr()
 
 int FliLogicObjHdl::set_signal_value(const long value, const gpi_set_action_t action)
 {
-    // if (action != GPI_DEPOSIT) {
-    //     LOG_ERROR("Force or release action not supported for FLI.");
-    //     return -1;
-    // }
-
     if (m_fli_type == MTI_TYPE_ENUM) {
         mtiInt32T enumVal = value ? m_enum_map['1'] : m_enum_map['0'];
         if (m_is_var) {
@@ -416,11 +406,6 @@ int FliLogicObjHdl::set_signal_value(const long value, const gpi_set_action_t ac
 
 int FliLogicObjHdl::set_signal_value_binstr(std::string &value, const gpi_set_action_t action)
 {
-    // if (action != GPI_DEPOSIT) {
-    //     LOG_ERROR("Force or release action not supported for FLI.");
-    //     return -1;
-    // }
-
     if (m_fli_type == MTI_TYPE_ENUM) {
         mtiInt32T enumVal = m_enum_map[value.c_str()[0]];
 
@@ -552,10 +537,6 @@ long FliIntObjHdl::get_signal_value_long()
 
 int FliIntObjHdl::set_signal_value(const long value, const gpi_set_action_t action)
 {
-    if (action != GPI_DEPOSIT) {
-        LOG_ERROR("Force or release action not supported for FLI.");
-        return -1;
-    }
     if (m_is_var) {
         if (action == GPI_DEPOSIT) {
             mti_SetVarValue(get_handle<mtiVariableIdT>(), value);
@@ -572,10 +553,10 @@ int FliIntObjHdl::set_signal_value(const long value, const gpi_set_action_t acti
             {
                 std::string val_str;
                 if (value < 0)
-                    std::string val_str = "-10#" + std::to_string(std::abs(value));
+                    val_str = "-10#" + std::to_string(std::abs(value));
                 else
-                    std::string val_str = "10#" + std::to_string(value);
-                mti_ForceSignal(get_handle<mtiSignalIdT>(), const_cast<char*>(val_str.c_str()), 0, MTI_FORCE_FREEZE, -1, -1);
+                    val_str = "10#" + std::to_string(value);
+                mti_ForceSignal(get_handle<mtiSignalIdT>(), const_cast<char *>(val_str.c_str()), 0, MTI_FORCE_FREEZE, -1, -1);
                 break;
             }
             case GPI_RELEASE:
