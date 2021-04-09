@@ -253,6 +253,8 @@ class RegressionManager:
                 wall_time_s=0,
                 sim_time_ns=0)
 
+        self.inject_functional_coverage_result()
+
         # Write out final log messages
         self._log_test_summary()
         self._log_sim_summary()
@@ -418,6 +420,7 @@ class RegressionManager:
         except OSError:
             lineno = 1
 
+        self.xunit_classname = test.__module__
         self.xunit.add_testcase(name=test.__qualname__,
                                 classname=test.__module__,
                                 file=inspect.getfile(test._func),
@@ -583,6 +586,34 @@ class RegressionManager:
             else:
                 return float('inf')
 
+    def inject_functional_coverage_result(self) -> None:
+        try:
+            from cocotb_coverage.coverage import coverage_db
+            if len(coverage_db) != 0:
+                coverage_db.report_coverage(self.log.info, bins=True)
+                self.xunit.add_testcase(
+                    classname=self.xunit_classname,
+                    name="_functional_coverage"
+                )
+
+                test_pass = False
+                for key, val in coverage_db.items():
+                    if not ("." in key):
+                        if val.size == val.coverage:
+                            test_pass = True
+                        else:
+                            self.xunit.add_failure()
+                        break
+
+                self.test_results.append({
+                    'test': '.'.join([self.xunit_classname, "_functional_coverage"]),
+                    'pass': test_pass,
+                    'sim': 0,
+                    'real': 0,
+                    'ratio': 0})
+
+        except ImportError:
+            pass
 
 def _create_test(function, name, documentation, mod, *args, **kwargs):
     """Factory function to create tests, avoids late binding.
